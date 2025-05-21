@@ -145,6 +145,8 @@ typename avlSet<val>::node* avlSet<val>::put(node* Root, const val& Value){
 
 template<typename val>
 typename avlSet<val>::node* avlSet<val>::rotate_rr(node* Root){
+//	std::cout << "rotate_rr\n";
+
 	node* NewRoot = Root->Right;
 	Root->Right = NewRoot->Left;
 	NewRoot->Left = Root;
@@ -156,6 +158,8 @@ typename avlSet<val>::node* avlSet<val>::rotate_rr(node* Root){
 }
 template<typename val>
 typename avlSet<val>::node* avlSet<val>::rotate_ll(node* Root){
+//	std::cout << "rotate_ll\n";
+
 	node* NewRoot = Root->Left;
 	Root->Left = NewRoot->Right;
 	NewRoot->Right = Root;
@@ -167,11 +171,15 @@ typename avlSet<val>::node* avlSet<val>::rotate_ll(node* Root){
 }
 template<typename val>
 typename avlSet<val>::node* avlSet<val>::rotate_rl(node* Root){
+//	std::cout << "rotate_rl\n";
+
 	Root->Right = rotate_ll(Root->Right);
 	return rotate_rr(Root);
 }
 template<typename val>
 typename avlSet<val>::node* avlSet<val>::rotate_lr(node* Root){
+//	std::cout << "rotate_lr\n";
+
 	Root->Left = rotate_rr(Root->Left);
 	return rotate_ll(Root);
 }
