@@ -2,4 +2,4 @@
 *.out
 *.dat
 *.swp
-*.idx
+*.cache/
