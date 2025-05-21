@@ -52,7 +52,7 @@ class hardMap {
 				if(IsWrite){
 					File->seekp(CurrentPos);
 					File->write(reinterpret_cast<char*>(&Current), sizeof(hardNode));
-					if(!(File)) throw std::runtime_error("Err in hardMap<id , data>::dataProxy");
+					if(!(File)) std::cerr << "Err in hardMap<id , data>::dataProxy\n";
 				}
 			}
 		};
@@ -66,17 +66,12 @@ class hardMap {
 		bool read_file(const long long& Pos, hardNode& Output);
 		long long search(const long long& CurrentPos, const id& Id);
 		long long put(const long long& , const hardNode&);
-		long long find_down_less(long long);
-		long long find_down_more(long long);
-		long long find_up_less(long long);
-		long long find_up_more(long long);
-		long long successor(const data&);
-		long long predecessor(const data&);
+		long long successor(const id&);
+		long long predecessor(const id&);
 		long long rotate_rr(const long long&, hardNode&);
 		long long rotate_ll(const long long&, hardNode&);
 		long long rotate_rl(const long long&, hardNode&);
 		long long rotate_lr(const long long&, hardNode&);
-		long long rotational(const long long& Root);
 		void update_node(const long long&, hardNode&, const long long&);
 	public:
 
@@ -114,12 +109,16 @@ class hardMap {
 
 		class iterator;
 		iterator begin(){
+			const std::string ErrLog = "err in hardMap<id, data>::begin";
 			if(Size == 0) return iterator(*this, -1);
 			long long CurrentPos = Head;
-			long long PredecessorPos = predecessor(CurrentPos);
+			hardNode CurrentNode;
+			if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
+			long long PredecessorPos = predecessor(CurrentNode.Id);
 			while(PredecessorPos != -1){
 				CurrentPos = PredecessorPos;
-				PredecessorPos = predecessor(CurrentPos);
+				if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
+				PredecessorPos = predecessor(CurrentNode.Id);
 			}
 			return iterator(*this, CurrentPos);
 		}
@@ -128,7 +127,7 @@ class hardMap {
 		void insert(const std::pair<id, data>&);
 
 		~hardMap(){
-			if(!write_key({Size , Head})) throw std::runtime_error( "err in hardMap<id , data>::~hardMap");
+			if(!write_key({Size , Head})) std::cerr << "err in hardMap<id , data>::~hardMap\n";
 			File.close();
 		}
 };
@@ -217,24 +216,6 @@ long long hardMap<id, data>::rotate_lr(const long long& RootPos, hardNode& RootN
 	return rotate_ll(RootPos, RootNode);
 }
 
-//template<typename id, typename data>
-//long long hardMap<id , data>::successor(const long long& CurrentPos){
-//	const std::string ErrLog = "err in hardMap<id , data>::successor";
-//	auto CandPos = find_down_more(CurrentPos);
-//	if(CandPos == -1){
-//		CandPos = find_up_more(CurrentPos);
-//	}
-//	return CandPos;
-//}
-/*template<typename id, typename data>
-long long hardMap<id, data>::predecessor(const long long& CurrentPos){
-	const std::string ErrLog = "err in hardMap<id , data>::predecessor";
-	auto CandPos = find_down_less(CurrentPos);
-	if(CandPos == -1){
-		CandPos = find_up_less(CurrentPos);
-	}
-	return CandPos;
-}*/
 
 template<typename id, typename data>
 void hardMap<id, data>::update_node(const long long& LeftHeight ,hardNode& CurrentNode, const long long& RightHeight){
@@ -407,44 +388,12 @@ bool hardMap<id , data>::write_key(const firstKey& Key){
 	}
 	return true;
 }
-template <typename id,typename data>
-long long hardMap<id, data>::find_down_less(long long CurrentPos){
-	const std::string ErrLog = "err in hardMap<id , data>::find_down_less";
-	hardNode CurrentNode;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	if(CurrentNode.LeftOffset == -1) return -1;
-	CurrentPos = CurrentNode.LeftOffset;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read_file");
-	while(CurrentNode.RightOffset != -1){
-		CurrentPos = CurrentNode.RightOffset;
-		if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read_file");
-	}
-	return CurrentPos;
-}
 
-template <typename id,typename data>
-long long hardMap<id, data>::find_down_more(long long CurrentPos){
-	const std::string ErrLog = "err in hardMap<id , data>::find_down_more";
+template <typename id, typename data>
+long long hardMap<id, data>::predecessor(const id& InputId){
+	const std::string ErrLog = "err in hardMap<id, data>::predecessor";
 	hardNode CurrentNode;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read_file");
-	if(CurrentNode.RightOffset == -1) return -1;
-	CurrentPos = CurrentNode.RightOffset;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	while(CurrentNode.LeftOffset != -1){
-		CurrentPos = CurrentNode.LeftOffset;
-		if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	}
-	return CurrentPos;
-}
-
-template <typename id,typename data>
-long long hardMap<id, data>::successor(const data& InputData){
-	const std::string ErrLog = "err in hardMap<id , data>::find_up_less";
-	hardNode InputNode;
-	const auto& InputId = InputNode.Id;
-	hardNode& CurrentNode = InputNode;
-	long long CurrentPos;
-	CurrentPos = Head;
+	long long CurrentPos = Head;
 	long long CandPos = -1;
 	while(CurrentPos != -1){
 		if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
@@ -459,14 +408,10 @@ long long hardMap<id, data>::successor(const data& InputData){
 }
 
 template <typename id,typename data>
-long long hardMap<id, data>::find_up_more(long long InputPos){
-	const std::string ErrLog = "err in hardMap<id , data>::find_up_more";
-	hardNode InputNode;
-	if(!read_file(InputPos, InputNode)) throw std::runtime_error(ErrLog + "can't read");
-	const auto& InputId = InputNode.Id;
-	hardNode& CurrentNode = InputNode;
-	long long& CurrentPos = InputPos;
-	CurrentPos = Head;
+long long hardMap<id, data>::successor(const id& InputId){
+	const std::string ErrLog = "err in hardMap<id , data>::successor";
+	hardNode CurrentNode;
+	long long CurrentPos = Head;
 	long long CandPos = -1;
 	while(CurrentPos != -1){
 		if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
@@ -479,6 +424,7 @@ long long hardMap<id, data>::find_up_more(long long InputPos){
 	}
 	return CandPos;
 }
+
 template<typename id, typename data>
 class hardMap<id , data>::iterator{
 	private:
@@ -493,13 +439,21 @@ class hardMap<id , data>::iterator{
 			if(!(Owner->read_file(CurrentPos, CurrentNode))) throw std::runtime_error("err in hardMap<id , data>::iterator::operator*");
 			return std::pair<const id, dataProxy>(CurrentNode.Id , dataProxy(Owner->File, CurrentPos, CurrentNode));
 		}
+		iterator& operator=(const iterator& _Other){
+			Owner = _Other.Owner;
+			CurrentPos = _Other.CurrentPos;
+		}
 		iterator& operator++(){
-			CurrentPos = (Owner->successor(CurrentPos));
+			hardNode CurrentNode;
+			if(!Owner->read_file(CurrentPos, CurrentNode)) throw std::runtime_error("can't read");
+			CurrentPos = (Owner->successor(CurrentNode.Id));
 			return *this;
 		}
 		iterator& operator++(int){
 			auto Temp = *this;
-			CurrentPos = (Owner->successor(CurrentPos));
+			hardNode CurrentNode;
+			if(!Owner->read_file(CurrentPos, CurrentNode)) throw std::runtime_error("can't read");
+			CurrentPos = (Owner->successor(CurrentNode.Id));
 			return Temp;
 		}
 		bool operator==(const iterator& _Other){

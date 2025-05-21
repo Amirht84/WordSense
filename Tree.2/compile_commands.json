@@ -1,0 +1,17 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-g",
+      "-IInclude",
+      "-c",
+      "-o",
+      "Bin/main.o",
+      "Source/main.cpp"
+    ],
+    "directory": "/home/amir/Programming/SelfProjects/Data/Tree/Tree.2",
+    "file": "/home/amir/Programming/SelfProjects/Data/Tree/Tree.2/Source/main.cpp",
+    "output": "/home/amir/Programming/SelfProjects/Data/Tree/Tree.2/Bin/main.o"
+  }
+]

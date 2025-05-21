@@ -12,10 +12,10 @@ TARGET = main.out
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CFLAGS) $^ -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:
