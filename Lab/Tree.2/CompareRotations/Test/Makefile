@@ -1,3 +1,5 @@
+include ../Configs/config.mk
+
 SRC_DIR = Source
 OBJ_DIR = Bin
 HED_DIR = Include
@@ -7,7 +9,7 @@ OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
 CXX = g++
 CFLAGS = -Wall -g -I$(HED_DIR)
-TARGET = test.out
+TARGET = $(TestExe)
 
 all: $(TARGET)
 
