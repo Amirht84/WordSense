@@ -70,8 +70,8 @@ class hardMap {
 		long long find_down_more(long long);
 		long long find_up_less(long long);
 		long long find_up_more(long long);
-		long long successor(const long long& Pos);
-		long long predecessor(const long long& CurrentPos);
+		long long successor(const data&);
+		long long predecessor(const data&);
 		long long rotate_rr(const long long&, hardNode&);
 		long long rotate_ll(const long long&, hardNode&);
 		long long rotate_rl(const long long&, hardNode&);
@@ -217,16 +217,16 @@ long long hardMap<id, data>::rotate_lr(const long long& RootPos, hardNode& RootN
 	return rotate_ll(RootPos, RootNode);
 }
 
-template<typename id, typename data>
-long long hardMap<id , data>::successor(const long long& CurrentPos){
-	const std::string ErrLog = "err in hardMap<id , data>::successor";
-	auto CandPos = find_down_more(CurrentPos);
-	if(CandPos == -1){
-		CandPos = find_up_more(CurrentPos);
-	}
-	return CandPos;
-}
-template<typename id, typename data>
+//template<typename id, typename data>
+//long long hardMap<id , data>::successor(const long long& CurrentPos){
+//	const std::string ErrLog = "err in hardMap<id , data>::successor";
+//	auto CandPos = find_down_more(CurrentPos);
+//	if(CandPos == -1){
+//		CandPos = find_up_more(CurrentPos);
+//	}
+//	return CandPos;
+//}
+/*template<typename id, typename data>
 long long hardMap<id, data>::predecessor(const long long& CurrentPos){
 	const std::string ErrLog = "err in hardMap<id , data>::predecessor";
 	auto CandPos = find_down_less(CurrentPos);
@@ -234,7 +234,7 @@ long long hardMap<id, data>::predecessor(const long long& CurrentPos){
 		CandPos = find_up_less(CurrentPos);
 	}
 	return CandPos;
-}
+}*/
 
 template<typename id, typename data>
 void hardMap<id, data>::update_node(const long long& LeftHeight ,hardNode& CurrentNode, const long long& RightHeight){
@@ -438,13 +438,12 @@ long long hardMap<id, data>::find_down_more(long long CurrentPos){
 }
 
 template <typename id,typename data>
-long long hardMap<id, data>::find_up_less(long long InputPos){
+long long hardMap<id, data>::successor(const data& InputData){
 	const std::string ErrLog = "err in hardMap<id , data>::find_up_less";
 	hardNode InputNode;
-	if(!read_file(InputPos, InputNode)) throw std::runtime_error(ErrLog + "can't read");
 	const auto& InputId = InputNode.Id;
 	hardNode& CurrentNode = InputNode;
-	long long& CurrentPos = InputPos;
+	long long CurrentPos;
 	CurrentPos = Head;
 	long long CandPos = -1;
 	while(CurrentPos != -1){
