@@ -1,0 +1,17 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-g",
+      "-IInclude",
+      "-c",
+      "-o",
+      "Bin/test.o",
+      "Source/test.cpp"
+    ],
+    "directory": "/home/amir/Programming/SelfProjects/Data/Tree/Lab/Tree.2/RamAvlSet",
+    "file": "/home/amir/Programming/SelfProjects/Data/Tree/Lab/Tree.2/RamAvlSet/Source/test.cpp",
+    "output": "/home/amir/Programming/SelfProjects/Data/Tree/Lab/Tree.2/RamAvlSet/Bin/test.o"
+  }
+]
