@@ -25,7 +25,10 @@ UserInput=Continue
 while [ "$UserInput" != "Exit" ]; do
 	if [ "$UserInput" == "Continue" ]; then
 		Input="$(./input_maker.out)"
+		echo "$Input"
+		echo --------------------------------------
 		ExamOutput=$(echo "$Input" | ./$ExamExe)
+		echo "$Input"
 		TestOutput=$(echo "$Input" | ./$TestExe)
 		if [ "$ExamOutput" != "$TestOutput" ]; then
 			mkdir -p Logs

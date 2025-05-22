@@ -196,8 +196,9 @@ long long hardMap<id, data>::rotate_rl(const long long& RootPos, hardNode& RootN
 	const std::string ErrLog = "err in hardMap<id, data>::rotate_rl";
 	hardNode RightNode;
 	if(!read_file(RootNode.RightOffset, RightNode)) throw std::runtime_error(ErrLog + "can't read");
+	long long Temp = RootNode.RightOffset;
 	RootNode.RightOffset = rotate_ll(RootNode.RightOffset, RightNode);
-	if(!write_file(RootNode.RightOffset, RightNode)) throw std::runtime_error(ErrLog + "can't write");
+	if(!write_file(Temp, RightNode)) throw std::runtime_error(ErrLog + "can't write");
 
 	return rotate_rr(RootPos, RootNode);
 	
@@ -210,8 +211,9 @@ long long hardMap<id, data>::rotate_lr(const long long& RootPos, hardNode& RootN
 	
 	hardNode LeftNode;
 	if(!read_file(RootNode.LeftOffset, LeftNode)) throw std::runtime_error(ErrLog + "can't read");
+	long long Temp = RootNode.LeftOffset;
 	RootNode.LeftOffset = rotate_rr(RootNode.LeftOffset, LeftNode);
-	if(!write_file(RootNode.LeftOffset, LeftNode)) throw std::runtime_error(ErrLog + "can't write");
+	if(!write_file(Temp, LeftNode)) throw std::runtime_error(ErrLog + "can't write");
 	
 	return rotate_ll(RootPos, RootNode);
 }
