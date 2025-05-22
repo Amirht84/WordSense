@@ -31,6 +31,7 @@ while [ "$UserInput" != "Exit" ]; do
 			echo "Failed! (Exit/Continue)"
 			read UserInput
 		elif [ $Counter -eq $PassRoof ]; then
+			Counter=0
 			echo "Pass roof reached! (Exit/Continue)"
 			read UserInput
 		else

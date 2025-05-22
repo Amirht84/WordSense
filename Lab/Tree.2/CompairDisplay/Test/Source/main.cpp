@@ -12,12 +12,15 @@ int main(){
 	while(std::cin >> Input){
 		std::cout << "-----------------------------\n";
 		Test.insert({Input, 'i'});
+		for(auto Temp : Test){
+			std::cout << Temp.first << ' ';
+		}
+		std::cout << '\n';
 	}
 	return 0;
 }
 
 std::string get_dir_name(){
-	return "Temp";
 	std::string DirName;
 	std::ifstream ConfigFile("Configs/config.ini");
 	if(!ConfigFile){
