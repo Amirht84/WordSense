@@ -25,11 +25,9 @@ UserInput=Continue
 while [ "$UserInput" != "Exit" ]; do
 	if [ "$UserInput" == "Continue" ]; then
 		Input="$(./input_maker.out)"
-		echo "$Input"
-		echo --------------------------------------
 		ExamOutput=$(echo "$Input" | ./$ExamExe)
-		echo "$Input"
 		TestOutput=$(echo "$Input" | ./$TestExe)
+		rm -r $BaseDir
 		if [ "$ExamOutput" != "$TestOutput" ]; then
 			mkdir -p Logs
 			echo "$ExamOutput" >> Logs/exam_log.txt
@@ -53,5 +51,4 @@ while [ "$UserInput" != "Exit" ]; do
 	fi
 done
 
-rm -r $BaseDir
 rm *.out
