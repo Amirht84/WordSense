@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <functional>
 
 template<typename val>
 class avlSet{
@@ -30,18 +31,31 @@ class avlSet{
 		void insert(const val&);
 		void display();
 		void display_tree();
+		~avlSet();
 };
+
+template<typename val>
+avlSet<val>::~avlSet(){
+	std::function<void(node*)> delete_nodes = [&](node* Root){
+		if (!Root) return;
+		delete_nodes(Root->left);
+		delete_nodes(Root->Right);
+		delete Root;
+	};
+	delete_nodes(Head);
+}
+
 template<typename val>
 void avlSet<val>::display_tree(){
-	auto main_engine = [](auto self, node* Root) -> void {
+	std::function<void(node*)> main_engine = [&](node* Root) -> void {
 		std::cout << Root->Value << '\n';
 		if(Root->Right != nullptr){
 			std::cout << "right child of " << Root->Value << ": ";
-			self(self, Root->Right);
+			main_engine(Root->Right);
 		}
 		if(Root->Left != nullptr){
 			std::cout << "left child of " << Root->Value << ": ";
-			self(self, Root->Left);
+			main_engine(Root->Left);
 		}
 	};
 	
