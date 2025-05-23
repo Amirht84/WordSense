@@ -18,6 +18,11 @@ int main(){
 					std::cout << It.first << " " << It.second << '|';
 				}
 				std::cout << '\n';
+			break;}case 's':{
+				int Key;
+				std::cin >> Key;
+				auto It = Map.find(Key);
+				std::cout << (*It).second << '\n';
 			break;}
 		}
 	}
