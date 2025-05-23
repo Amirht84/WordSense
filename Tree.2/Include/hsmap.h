@@ -78,6 +78,8 @@ class hsMap {
 	public:
 
 		hsMap(const std::string& _DirName): Size(0), Head(-1), Keys(_DirName + "keys/"){
+			const std::string ErrLog = "err in hsMap<id, data>::hsMap";
+
 			std::filesystem::create_directories(_DirName);
 			const std::string FileName = _DirName + "data.dat";
 			File.open( FileName, std::ios::in | std::ios::out | std::ios::binary );
@@ -85,19 +87,7 @@ class hsMap {
 				std::ofstream CreateFile(FileName , std::ios::binary);
 				CreateFile.close();
 				File.open(FileName, std::ios::in | std::ios::out | std::ios::binary);
-
-				firstKey Key = {0 , -1};
-				File.write(reinterpret_cast<char*>(&Key), sizeof(firstKey));
-				if(!File) throw std::runtime_error("Err in hsMap<id , data>::hsMap can't read");
-				Size = Key.Size;
-				Head = Key.Head;
-			}else{
-				File.seekg(0);
-				firstKey Key;
-				File.read(reinterpret_cast<char*>(&Key), sizeof(firstKey));
-				if(!File) throw std::runtime_error("Err in hsMap<id , data>::hsMap can't write");
-				Size = Key.Size;
-				Head = Key.Head;
+				if(!File) throw std::runtime_error(ErrLog + "can't open the file");
 			}
 		}
 		dataProxy operator[](const id& Id){
@@ -314,9 +304,8 @@ void hsMap<id , data>::insert(const std::pair<id , data>& Input){
 	New.Data = Input.second;
 
 	if(Size == 0){
-		long long Offset = sizeof(firstKey);
-		if(!write_file(Offset, New)) throw std::runtime_error(ErrLog + "can't write");
-		Head = Offset;
+		Head = find_free_pos();
+		if(!write_file(Head, New)) throw std::runtime_error(ErrLog + "can't read");
 		Size = 1;
 		if(!write_key({Size, Head})) throw std::runtime_error(ErrLog + "can't write");
 	}else{
@@ -333,7 +322,7 @@ long long hsMap<id , data>::search(const long long& CurrentPos, const id& Id){
 		return -1;
 	}
 	hardNode Current;
-	if(!read_file(CurrentPos, Current)) throw std::runtime_error(ErrLog + "can't read");
+	if(!read_file(CurrentPos, Current)) throw std::runtime_error(ErrLog + "can't read 1");
 	if(Id == Current.Id){
 		return CurrentPos;
 	}else if(Id < Current.Id){
@@ -377,9 +366,9 @@ long long hsMap<id , data>::find_free_pos(){
 	const std::string ErrLog = "Err in hsMap<id , data>::find_free_pos";
 	File.seekp(0 , std::ios::end);
 	long long End = File.tellp();	
-	long long Offset = sizeof(firstKey);
+	long long Offset = 0;
 	char IsUsed;
-	while(true){
+	while(Offset != End){
 		File.seekg(Offset);
 		File.read(&IsUsed , 1);
 		if(!File ) throw std::runtime_error(ErrLog + "can't read file");
@@ -387,9 +376,6 @@ long long hsMap<id , data>::find_free_pos(){
 			return Offset;
 		}
 		Offset += sizeof(hardNode);
-		if(Offset == End){
-			break;
-		}
 	}
 	return Offset;
 }

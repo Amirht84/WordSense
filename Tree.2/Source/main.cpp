@@ -1,8 +1,8 @@
-#include "hardmap.h"
+#include "hsmap.h"
 #include <iostream>
 
 int main(){
-	hardMap<int, char> Map("Map/");
+	hsMap<int, char> Map("Map/");
 
 	char Input = ' ';
 	while(Input != 'f'){
@@ -23,6 +23,14 @@ int main(){
 				std::cin >> Key;
 				auto It = Map.find(Key);
 				std::cout << (*It).second << '\n';
+			break;}case 'm':{
+				int MapId;
+				std::cin >> MapId;
+				Map.make_id(MapId);
+			break;}case 'c':{
+				int MapId;
+				std::cin >> MapId;
+				Map.change_id(MapId);
 			break;}
 		}
 	}

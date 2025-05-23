@@ -436,6 +436,7 @@ class hardMap<id , data>::iterator{
 		iterator& operator=(const iterator& _Other){
 			Owner = _Other.Owner;
 			CurrentPos = _Other.CurrentPos;
+			return *this;
 		}
 		iterator& operator++(){
 			hardNode CurrentNode;
