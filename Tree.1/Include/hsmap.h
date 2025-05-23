@@ -51,7 +51,7 @@ class hsMap{
 					File->seekp(CurrentPos);
 					File->write(reinterpret_cast<char*>(&Current), sizeof(hardNode));
 					if(!(File)){
-						throw std::runtime_error("Err in 'hsMap::dataProxy::~dataProxy()' can't write");
+						std::cout << "Err in 'hsMap::dataProxy::~dataProxy()' can't write\n";
 					}		
 				}
 			}

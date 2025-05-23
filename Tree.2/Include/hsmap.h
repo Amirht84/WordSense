@@ -1,40 +1,42 @@
-#ifndef __HSMAP__
-#define __HSMAP__
+#ifndef __HSMAP2__
+#define __HSMAP2__
 
-#include <filesystem>
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <utility>
 #include <stdexcept>
+#include <filesystem>
 #include "hardmap.h"
+
 template <typename id , typename data>
-class hsMap{
+class hsMap {
 	private:
 		const char YES = 'Y';
 		const char NO = 'N';
 		#pragma pack(push, 1)
 		struct hardNode{
-			char IsUsed;
-			long long Parent;
+			char IsUsed = 'Y';
 			id Id;
 			data Data;
-			long long RightOffset;
-			long long LeftOffset; 	
+			int Height = 1;
+			long long RightOffset = -1;
+			long long LeftOffset = -1;
+			int BF = 0;
 		};
-		#pragma pack(pop)
 		struct firstKey{
 			int Size;
 			long long Head;
 		};
-
+		#pragma pack(pop)
 		struct dataProxy{
 			std::fstream* File;
 			long long CurrentPos;
 			hardNode Current;
 			bool IsWrite;
 			dataProxy(std::fstream& _File, const long long& _Pos, const hardNode& _Node):
-				File(&_File),
-				CurrentPos(_Pos),
+				File(&_File), 
+				CurrentPos(_Pos), 
 				Current(_Node), 
 				IsWrite(false){}
 
@@ -50,265 +52,275 @@ class hsMap{
 				if(IsWrite){
 					File->seekp(CurrentPos);
 					File->write(reinterpret_cast<char*>(&Current), sizeof(hardNode));
-					if(!(File)){
-						throw std::runtime_error("Err in 'hsMap::dataProxy::~dataProxy()' can't write");
-					}		
+					if(!(File)) std::cerr << "Err in hsMap<id , data>::dataProxy\n";
 				}
 			}
 		};
-	
+		
 		int Size;
 		long long Head;
-		std::fstream DataFile;
+		std::fstream File;
 		hardMap<int, firstKey> Keys;
-		typename hardMap<int , firstKey>::iterator FirstKey;
+		typename hardMap<int, firstKey>::iterator FirstKey;
 		long long find_free_pos();
 		bool write_key(const firstKey& Key);
 		bool write_file(const long long& Pos, const hardNode& Input);
 		bool read_file(const long long& Pos, hardNode& Output);
 		long long search(const long long& CurrentPos, const id& Id);
-		void put(const long long& , hardNode);
-		long long find_down_less(long long);
-		long long find_down_more(long long);
-		long long find_up_less(long long);
-		long long find_up_more(long long);
-		long long successor(const long long& Pos);
-		long long predecessor(const long long& CurrentPos);
+		long long put(const long long& , const hardNode&);
+		long long successor(const id&);
+		long long predecessor(const id&);
+		long long rotate_rr(const long long&, hardNode&);
+		long long rotate_ll(const long long&, hardNode&);
+		long long rotate_rl(const long long&, hardNode&);
+		long long rotate_lr(const long long&, hardNode&);
+		void update_node(const long long&, hardNode&, const long long&);
 	public:
+
 		hsMap(const std::string& _DirName): Size(0), Head(-1), Keys(_DirName + "keys/"){
 			std::filesystem::create_directories(_DirName);
 			const std::string FileName = _DirName + "data.dat";
-			DataFile.open(FileName, std::ios::in | std::ios::out | std::ios::binary );
-			if(!DataFile.is_open()){
+			File.open( FileName, std::ios::in | std::ios::out | std::ios::binary );
+			if(!File.is_open()){
 				std::ofstream CreateFile(FileName , std::ios::binary);
 				CreateFile.close();
-				DataFile.open(FileName, std::ios::in | std::ios::out | std::ios::binary);
-				if(!DataFile.is_open()) throw std::runtime_error("err in 'hsMap<id, data>::hsMap'");
+				File.open(FileName, std::ios::in | std::ios::out | std::ios::binary);
+
+				firstKey Key = {0 , -1};
+				File.write(reinterpret_cast<char*>(&Key), sizeof(firstKey));
+				if(!File) throw std::runtime_error("Err in hsMap<id , data>::hsMap can't read");
+				Size = Key.Size;
+				Head = Key.Head;
+			}else{
+				File.seekg(0);
+				firstKey Key;
+				File.read(reinterpret_cast<char*>(&Key), sizeof(firstKey));
+				if(!File) throw std::runtime_error("Err in hsMap<id , data>::hsMap can't write");
+				Size = Key.Size;
+				Head = Key.Head;
 			}
 		}
 		dataProxy operator[](const id& Id){
-			const std::string ErrLog = "err in 'hsMap<id, data>::operator[]'";
+			const std::string ErrLog = "err in hsMap<id , data>::operator[]";
 			const auto CurrentPos = search(Head, Id);
-			if(CurrentPos == -1) throw std::runtime_error(ErrLog + "invalid Id");
+			if(CurrentPos == -1 ) throw std::runtime_error(ErrLog + "invalid Id");
 			hardNode Current;
 			if(!read_file(CurrentPos, Current)) throw std::runtime_error(ErrLog + "can't read");
-			return dataProxy(DataFile, CurrentPos, Current);
+			return dataProxy(File, CurrentPos, Current);
 		}
-		class iterator;
-		iterator find(const id& Id){
-			return iterator(*this, search(Head, Id));
-		}
-		iterator begin(){
-			if(Size == 0) return iterator(*this, -1);
 
+		class iterator;
+		inline iterator begin(){
+			const std::string ErrLog = "err in hsMap<id, data>::begin";
+			if(Size == 0) return iterator(*this, -1);
 			long long CurrentPos = Head;
-			long long PredecessorPos = predecessor(CurrentPos);
+			hardNode CurrentNode;
+			if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
+			long long PredecessorPos = predecessor(CurrentNode.Id);
 			while(PredecessorPos != -1){
 				CurrentPos = PredecessorPos;
-				PredecessorPos = predecessor(CurrentPos);
+				if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
+				PredecessorPos = predecessor(CurrentNode.Id);
 			}
-			return iterator(*this , CurrentPos);
+			return iterator(*this, CurrentPos);
 		}
-		iterator end(){return iterator(*this, -1);}
-		void erase(const id& Id);
-		void insert(const std::pair<id, data>& Input);
+		inline iterator end(){return iterator(*this, -1);}
+		iterator find(const id& Id){return iterator(*this, search(Head, Id));}
+		void insert(const std::pair<id, data>&);
 		void change_id(const int&);
 		void make_id(const int&);
+
 		~hsMap(){
-			if(!write_key({Size , Head})) throw std::runtime_error("err in 'hsMap<id, data>::~hsMap'");
-			DataFile.close();
+			if(!write_key({Size , Head})) std::cerr << "err in hsMap<id , data>::~hsMap\n";
+			File.close();
 		}
 };
+
 template<typename id, typename data>
 void hsMap<id, data>::make_id(const int& MapId){
 	FirstKey = Keys.find(MapId);
-	if(FirstKey != Keys.end()) std::runtime_error("err 'inhsMap<id, data>::make_id'");
-	Keys.insert({MapId, {0 , -1}});
+	if(FirstKey != Keys.end()) throw std::runtime_error("err in hsMap<id, data>::make_id repetitive MapId");
+	Keys.insert({MapId, {0, -1}});
 }
-void make_id(const int&);
+
 template<typename id, typename data>
 void hsMap<id, data>::change_id(const int& MapId){
 	FirstKey = Keys.find(MapId);
-	if(FirstKey == Keys.end()) throw std::runtime_error("err in 'hsMap<id, data>::change_id'");
+	if(FirstKey == Keys.end()) throw std::runtime_error("err in hsMap<id, data>::change_id MapId not available");
 	firstKey Temp = (*FirstKey).second;
 	Size = Temp.Size;
 	Head = Temp.Head;
 }
-template <typename id, typename data>
-void hsMap<id , data>::erase(const id& Id){
-	const std::string ErrLog = "err in hsMap<id, data>::erase";
-	const long long ErasePos = search(Head, Id);
 
-	if(ErasePos == -1){
-		 throw std::runtime_error(ErrLog + "Invalid Id");
-	}
-	hardNode EraseNode;
-
-	if(!read_file(ErasePos ,EraseNode)) throw std::runtime_error(ErrLog + "can't read");
-
-	auto manage_parent = [this, &ErrLog, &EraseNode, &ErasePos](const long long& NewChild){
-		if(EraseNode.Parent != -1){
-			hardNode ParentNode;
-			if(!read_file(EraseNode.Parent, ParentNode)) throw std::runtime_error(ErrLog + "can't read");
-			if(ParentNode.RightOffset == ErasePos){
-				ParentNode.RightOffset = NewChild;
-			}else{
-				ParentNode.LeftOffset = NewChild;
-			}
-			if(!write_file(EraseNode.Parent, ParentNode)) throw std::runtime_error(ErrLog + "can't write");
-		}else{
-			Head = NewChild;
-		}
+template<typename id, typename data>
+long long hsMap<id, data>::rotate_rr(const long long& RootPos, hardNode& RootNode){
+	const std::string ErrLog = "err in hsMap<id, data>::rotate_rr";
+	
+	auto get_height = [this, &ErrLog](const long long& InputPos){
+		if(InputPos == -1) return 0;
+		int Height;
+		File.seekg(InputPos + sizeof(char) + sizeof(id) + sizeof(data));
+		File.read(reinterpret_cast<char*>(&Height), sizeof(Height));
+		if(!File) throw std::runtime_error(ErrLog + "can't read");
+		return Height;
 	};
 
-	if(EraseNode.RightOffset == -1 && EraseNode.LeftOffset == -1){
-		manage_parent(-1);
-	}else if(EraseNode.RightOffset == -1 || EraseNode.LeftOffset == -1){
-		long long ChildPos;
-		if(EraseNode.RightOffset != -1){
-			ChildPos = EraseNode.RightOffset;
-		}else{
-			ChildPos = EraseNode.LeftOffset;
-		}
+	hardNode NewRootNode;
+	long long NewRootPos = RootNode.RightOffset;
+	if(!read_file(NewRootPos, NewRootNode)) throw std::runtime_error("can't read");
 
-		manage_parent(ChildPos);
+	RootNode.RightOffset = NewRootNode.LeftOffset;
+	NewRootNode.LeftOffset = RootPos;
 
-		hardNode ChildNode;
-		if(!read_file(ChildPos, ChildNode)) throw std::runtime_error(ErrLog + "can't read");
-		ChildNode.Parent = EraseNode.Parent;
-		if(!write_file(ChildPos, ChildNode)) throw std::runtime_error(ErrLog + "can't write");
-	}else{
-		const long long SuccessorPos = find_down_more(ErasePos);
-		hardNode SuccessorNode;
-		if(!read_file(SuccessorPos, SuccessorNode)) throw std::runtime_error(ErrLog + "can't read");
+	update_node(get_height(RootNode.LeftOffset) ,RootNode, get_height(RootNode.RightOffset));
+	update_node(RootNode.Height, NewRootNode, get_height(NewRootNode.RightOffset));
 
-		manage_parent(SuccessorPos);
-	
-		if(SuccessorPos == EraseNode.RightOffset){
-			SuccessorNode.LeftOffset = EraseNode.LeftOffset;
-			hardNode ChildNode;
-			if(!read_file(EraseNode.LeftOffset, ChildNode)) throw std::runtime_error(ErrLog + "can't read");
-			ChildNode.Parent = SuccessorPos;
-			if(!write_file(EraseNode.LeftOffset, ChildNode)) throw std::runtime_error(ErrLog + "can't write");
-		}else{
-			if(SuccessorNode.RightOffset != -1){
-				hardNode SuccessorChildNode;
-				if(!read_file(SuccessorNode.RightOffset, SuccessorChildNode)) throw std::runtime_error(ErrLog + "can't read");
-				SuccessorChildNode.Parent = SuccessorNode.Parent;
-				if(!write_file(SuccessorNode.RightOffset, SuccessorChildNode)) throw std::runtime_error(ErrLog + "can't write");
-			}
-			hardNode SuccessorParentNode;
-			if(!read_file(SuccessorNode.Parent, SuccessorParentNode)) throw std::runtime_error(ErrLog + "can't read");
-			SuccessorParentNode.LeftOffset = SuccessorNode.RightOffset;
-			if(!write_file(SuccessorNode.Parent, SuccessorParentNode)) throw std::runtime_error(ErrLog + "can't write");
+	if(!write_file(NewRootPos, NewRootNode)) throw std::runtime_error("can't write");
 
-			hardNode ChildNode;
-			SuccessorNode.RightOffset = EraseNode.RightOffset;
-			if(!read_file(EraseNode.RightOffset,ChildNode)) throw std::runtime_error(ErrLog + "can't read");
-			ChildNode.Parent = SuccessorPos;
-			if(!write_file(EraseNode.RightOffset, ChildNode)) throw std::runtime_error(ErrLog + "can't write");
-			SuccessorNode.LeftOffset = EraseNode.LeftOffset;
-			if(!read_file(EraseNode.LeftOffset, ChildNode)) throw std::runtime_error(ErrLog + "can't read");
-			ChildNode.Parent = SuccessorPos;
-			if(!write_file(EraseNode.LeftOffset, ChildNode)) throw std::runtime_error(ErrLog + "can't write");
-		}
-
-		SuccessorNode.Parent = EraseNode.Parent;
-		
-		if(!write_file(SuccessorPos, SuccessorNode)) throw std::runtime_error(ErrLog + "can't write");
-	}
-
-	EraseNode.LeftOffset = -1;
-	EraseNode.RightOffset = -1;
-	EraseNode.Parent = -1;
-	EraseNode.IsUsed = NO;
-	if(!write_file(ErasePos, EraseNode)) throw std::runtime_error(ErrLog + "can't write");
-	
-	--Size;
-	if(!write_key({Size, Head})) throw std::runtime_error(ErrLog + "can't write");
+	return NewRootPos;
 }
 template<typename id, typename data>
-long long hsMap<id , data>::successor(const long long& CurrentPos){
-	const std::string ErrLog = "err in 'hsMap<id, data>::successor'";
-	hardNode CurrentNode;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	if(CurrentNode.RightOffset != -1){
-		return find_down_more(CurrentPos);
-	}else if(CurrentNode.Parent != -1){
-		return find_up_more(CurrentPos);
-	}else{
-		return -1;
-	}
+long long hsMap<id, data>::rotate_ll(const long long& RootPos, hardNode& RootNode){
+	const std::string ErrLog = "err in hsMap<id, data>::rotate_ll";
+
+	auto get_height = [this, &ErrLog](const long long& InputPos){
+		if(InputPos == -1) return 0;
+		int Height;
+		File.seekg(InputPos + sizeof(char) + sizeof(id) + sizeof(data));
+		File.read(reinterpret_cast<char*>(&Height), sizeof(Height));
+		if(!File) throw std::runtime_error(ErrLog + "can't read");
+		return Height;
+	};
+
+	hardNode NewRootNode;
+	long long NewRootPos = RootNode.LeftOffset;
+	if(!read_file(NewRootPos, NewRootNode)) throw std::runtime_error("can't read");
+
+	RootNode.LeftOffset = NewRootNode.RightOffset;
+	NewRootNode.RightOffset = RootPos;
+
+	update_node(get_height(RootNode.LeftOffset) ,RootNode, get_height(RootNode.RightOffset));
+	update_node(get_height(NewRootNode.LeftOffset), NewRootNode, RootNode.Height);
+
+	if(!write_file(NewRootPos, NewRootNode)) throw std::runtime_error("can't write");
+
+	return NewRootPos;
 }
 template<typename id, typename data>
-long long hsMap<id, data>::predecessor(const long long& CurrentPos){
-	const std::string ErrLog = "err in 'hsMap<id, data>::predecessor'";
-	hardNode CurrentNode;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	if(CurrentNode.LeftOffset != -1){
-		return find_down_less(CurrentPos);
-	}else if(CurrentNode.Parent != -1){
-		return find_up_less(CurrentPos);
-	}else{
-		return -1;
-	}
+long long hsMap<id, data>::rotate_rl(const long long& RootPos, hardNode& RootNode){
+	const std::string ErrLog = "err in hsMap<id, data>::rotate_rl";
+	hardNode RightNode;
+	if(!read_file(RootNode.RightOffset, RightNode)) throw std::runtime_error(ErrLog + "can't read");
+	long long Temp = RootNode.RightOffset;
+	RootNode.RightOffset = rotate_ll(RootNode.RightOffset, RightNode);
+	if(!write_file(Temp, RightNode)) throw std::runtime_error(ErrLog + "can't write");
+
+	return rotate_rr(RootPos, RootNode);
+	
+}
+template<typename id, typename data>
+long long hsMap<id, data>::rotate_lr(const long long& RootPos, hardNode& RootNode){
+	const std::string ErrLog = "err in hsMap<id, data>::rotate_lr";
+	
+	hardNode LeftNode;
+	if(!read_file(RootNode.LeftOffset, LeftNode)) throw std::runtime_error(ErrLog + "can't read");
+	long long Temp = RootNode.LeftOffset;
+	RootNode.LeftOffset = rotate_rr(RootNode.LeftOffset, LeftNode);
+	if(!write_file(Temp, LeftNode)) throw std::runtime_error(ErrLog + "can't write");
+	
+	return rotate_ll(RootPos, RootNode);
+}
+
+
+template<typename id, typename data>
+void hsMap<id, data>::update_node(const long long& LeftHeight ,hardNode& CurrentNode, const long long& RightHeight){
+	const std::string ErrLog = "err in update_node";
+	CurrentNode.BF = RightHeight - LeftHeight;
+	CurrentNode.Height = 1 + std::max(RightHeight , LeftHeight);
 }
 
 template <typename id , typename data>
-void hsMap<id , data>::put(const long long& CurrentPos, hardNode New){
-	const std::string ErrLog = "err in 'hsMap<id, data>::put'";
-	hardNode Current;	
-	if(!read_file(CurrentPos, Current)) throw std::runtime_error(ErrLog + "can't read");
+long long hsMap<id , data>::put(const long long& CurrentPos, const hardNode& New){
+	const std::string ErrLog = "err in hsMap<id , data>::put";
 
-	if(New.Id < Current.Id){
-		if(Current.LeftOffset == -1){
+	auto get_bf = [this, &ErrLog](const long long& InputPos){
+		if(InputPos == -1) return 0;
+		int BF;
+		File.seekg(InputPos + sizeof(char) + sizeof(id) + sizeof(data) + sizeof(int) + sizeof(long long) + sizeof(long long));
+		File.read(reinterpret_cast<char*>(&BF) , sizeof(BF));
+		if(!File) throw std::runtime_error(ErrLog + "can't read");
+		return BF;
+	};
+	auto get_height = [this, &ErrLog](const long long& InputPos){
+		if(InputPos == -1) return 0;
+		int Height;
+		File.seekg(InputPos + sizeof(char) + sizeof(id) + sizeof(data));
+		File.read(reinterpret_cast<char*>(&Height), sizeof(Height));
+		if(!File) throw std::runtime_error(ErrLog + "can't read");
+		return Height;
+	};
+
+	hardNode CurrentNode;
+	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
+
+	if(New.Id < CurrentNode.Id){
+		if(CurrentNode.LeftOffset == -1){
 			long long FreePos = find_free_pos();
-			New.Parent = CurrentPos;
 			if(!write_file(FreePos, New)) throw std::runtime_error(ErrLog + "can't write");
-			Current.LeftOffset = FreePos;
-			if(!write_file(CurrentPos, Current)) throw std::runtime_error(ErrLog + "can't write");
-			return; 
+			CurrentNode.LeftOffset = FreePos;
 		}else{
-			put(Current.LeftOffset, New);
-			return;
+			CurrentNode.LeftOffset = put(CurrentNode.LeftOffset, New);
 		}
-	}else if(New.Id > Current.Id){
-		if(Current.RightOffset == -1){
+	}else if(New.Id > CurrentNode.Id){
+		if(CurrentNode.RightOffset == -1){
 			long long FreePos = find_free_pos();
-			New.Parent = CurrentPos;
 			if(!write_file(FreePos, New)) throw std::runtime_error(ErrLog + "can't write");
-			Current.RightOffset = FreePos;
-			if(!write_file(CurrentPos, Current)) throw std::runtime_error(ErrLog + "can't write");
-			return;
+			CurrentNode.RightOffset = FreePos;
 		}else{
-			put(Current.RightOffset, New);
-			return;
+			CurrentNode.RightOffset = put(CurrentNode.RightOffset, New);
 		}
 	}
-	throw std::runtime_error(ErrLog + " not logical act");
+	update_node(get_height(CurrentNode.LeftOffset), CurrentNode, get_height(CurrentNode.RightOffset));
+	
+	long long NewRootPos;
+	if(CurrentNode.BF > 1){
+		if(get_bf(CurrentNode.RightOffset) >= 0){
+			NewRootPos = rotate_rr(CurrentPos, CurrentNode);
+		}else {
+			NewRootPos = rotate_rl(CurrentPos, CurrentNode);
+		}
+	}else if(CurrentNode.BF < -1){
+		if(get_bf(CurrentNode.LeftOffset) <= 0){
+			NewRootPos = rotate_ll(CurrentPos, CurrentNode);
+		}else{
+			NewRootPos = rotate_lr(CurrentPos, CurrentNode);
+		}
+	}else{
+		NewRootPos = CurrentPos;
+	}
+
+	if(!write_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't write");
+
+	return NewRootPos;
 }
 template <typename id , typename data>
-void hsMap<id , data>::insert(const std::pair<id, data>& Input){
-	const std::string ErrLog = "Err 'inhsMap<id, data>::insert'";
+void hsMap<id , data>::insert(const std::pair<id , data>& Input){
+	const std::string ErrLog = "Err in hsMap<id , data>::insert";
 	if(Size != 0 && search(Head, Input.first) != -1){
 		return;
 	}
 	hardNode New;
-	New.IsUsed = YES;
-	New.Parent = -1;
-	New.RightOffset = -1;
-	New.LeftOffset = -1;
 	New.Id = Input.first;
 	New.Data = Input.second;
 
 	if(Size == 0){
-		long long Offset = find_free_pos();
+		long long Offset = sizeof(firstKey);
 		if(!write_file(Offset, New)) throw std::runtime_error(ErrLog + "can't write");
 		Head = Offset;
 		Size = 1;
 		if(!write_key({Size, Head})) throw std::runtime_error(ErrLog + "can't write");
 	}else{
-		put(Head, New);
+		Head = put(Head, New);
 		Size++;
 		if(!write_key({Size, Head})) throw std::runtime_error(ErrLog + "can't write");
 	}
@@ -316,7 +328,10 @@ void hsMap<id , data>::insert(const std::pair<id, data>& Input){
 
 template <typename id , typename data>
 long long hsMap<id , data>::search(const long long& CurrentPos, const id& Id){
-	const std::string ErrLog = "err 'inhsMap<id, data>::find_here'";
+	const std::string ErrLog = "err in hsMap<id , data>::search";
+	if(Size == 0){
+		return -1;
+	}
 	hardNode Current;
 	if(!read_file(CurrentPos, Current)) throw std::runtime_error(ErrLog + "can't read");
 	if(Id == Current.Id){
@@ -340,9 +355,9 @@ long long hsMap<id , data>::search(const long long& CurrentPos, const id& Id){
 
 template <typename id , typename data>
 bool hsMap<id , data>::read_file(const long long& Pos, hardNode& Output){
-	DataFile.seekg(Pos);
-	DataFile.read(reinterpret_cast<char*>(&Output) , sizeof(hardNode));
-	if(!DataFile){
+	File.seekg(Pos);
+	File.read(reinterpret_cast<char*>(&Output) , sizeof(hardNode));
+	if(!File){
 		return false;
 	}
 	return true;
@@ -350,101 +365,81 @@ bool hsMap<id , data>::read_file(const long long& Pos, hardNode& Output){
 
 template <typename id , typename data>
 bool hsMap<id , data>::write_file(const long long& Pos, const hardNode& Input){
-	DataFile.seekp(Pos);
-	DataFile.write(reinterpret_cast<const char*>(&Input), sizeof(hardNode));
-	if(!(DataFile)){
+	File.seekp(Pos);
+	File.write(reinterpret_cast<const char*>(&Input), sizeof(hardNode));
+	if(!(File)){
 		return false;
 	}
 	return true;
 }
 template <typename id , typename data>
 long long hsMap<id , data>::find_free_pos(){
-	const std::string ErrLog = "Err 'inhsMap<id, data>:: find_free_pos'";
-	DataFile.seekp(0 , std::ios::end);
-	long long End = DataFile.tellp();	
-	long long Offset = 0;
+	const std::string ErrLog = "Err in hsMap<id , data>::find_free_pos";
+	File.seekp(0 , std::ios::end);
+	long long End = File.tellp();	
+	long long Offset = sizeof(firstKey);
 	char IsUsed;
-	while(Offset != End){
-		DataFile.seekg(Offset);
-		DataFile.read(&IsUsed , 1);
-		if(!DataFile) throw std::runtime_error(ErrLog + " can't read file");
+	while(true){
+		File.seekg(Offset);
+		File.read(&IsUsed , 1);
+		if(!File ) throw std::runtime_error(ErrLog + "can't read file");
 		if(IsUsed == NO){
 			return Offset;
 		}
 		Offset += sizeof(hardNode);
+		if(Offset == End){
+			break;
+		}
 	}
 	return Offset;
 }
 
 template <typename id , typename data>
 bool hsMap<id , data>::write_key(const firstKey& Key){
-	(*FirstKey).second = Key;
+	try{
+		(*FirstKey).second = Key;
+	}catch(const std::runtime_error&){
+		return false;
+	}
 	return true;
 }
-template <typename id,typename data>
-long long hsMap<id, data>::find_down_less(long long CurrentPos){
-	const std::string ErrLog = "err in 'hsMap<id, data>::find_down_less'";
-	hardNode CurrentNode;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	if(CurrentNode.LeftOffset == -1) throw std::runtime_error(ErrLog + "LeftOffset is -1");
-	CurrentPos = CurrentNode.LeftOffset;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	while(CurrentNode.RightOffset != -1){
-		CurrentPos = CurrentNode.RightOffset;
-		if(!read_file(CurrentPos, CurrentNode)) std::runtime_error(ErrLog + "can't read");
-	}
-	return CurrentPos;
-}
 
-template <typename id,typename data>
-long long hsMap<id, data>::find_down_more(long long CurrentPos){
-	const std::string ErrLog = "err in 'hsMap<id, data>::find_down_more'";
+template <typename id, typename data>
+long long hsMap<id, data>::predecessor(const id& InputId){
+	const std::string ErrLog = "err in hsMap<id, data>::predecessor";
 	hardNode CurrentNode;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	if(CurrentNode.RightOffset == -1) throw std::runtime_error(ErrLog + "RightOffset is -1");
-	CurrentPos = CurrentNode.RightOffset;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	while(CurrentNode.LeftOffset != -1){
-		CurrentPos = CurrentNode.LeftOffset;
-		if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error (ErrLog + "can't read");
-	}
-	return CurrentPos;
-}
-
-template <typename id,typename data>
-long long hsMap<id, data>::find_up_less(long long CurrentPos){
-	const std::string ErrLog = "err in <find_up_less>";
-	hardNode CurrentNode;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	
-	long long ChildPos = CurrentPos;
-	CurrentPos = CurrentNode.Parent;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	while(ChildPos != CurrentNode.RightOffset){
-		if(CurrentNode.Parent == -1) return -1;
-		ChildPos = CurrentPos;
-		CurrentPos = CurrentNode.Parent;
+	long long CurrentPos = Head;
+	long long CandPos = -1;
+	while(CurrentPos != -1){
 		if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
+		if(CurrentNode.Id < InputId){
+			CandPos = CurrentPos;
+			CurrentPos = CurrentNode.RightOffset;
+		}else{
+			CurrentPos = CurrentNode.LeftOffset;
+		}
 	}
-	return CurrentPos;
+	return CandPos;
 }
 
 template <typename id,typename data>
-long long hsMap<id, data>::find_up_more(long long CurrentPos){
-	const std::string ErrLog = "err in <find_up_more>";
+long long hsMap<id, data>::successor(const id& InputId){
+	const std::string ErrLog = "err in hsMap<id , data>::successor";
 	hardNode CurrentNode;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	long long ChildPos = CurrentPos;
-	CurrentPos = CurrentNode.Parent;
-	if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
-	while(ChildPos != CurrentNode.LeftOffset){
-		if(CurrentNode.Parent == -1) return -1;
-		ChildPos = CurrentPos;
-		CurrentPos = CurrentNode.Parent;
+	long long CurrentPos = Head;
+	long long CandPos = -1;
+	while(CurrentPos != -1){
 		if(!read_file(CurrentPos, CurrentNode)) throw std::runtime_error(ErrLog + "can't read");
+		if(CurrentNode.Id > InputId){
+			CandPos = CurrentPos;
+			CurrentPos = CurrentNode.LeftOffset;
+		}else{
+			CurrentPos = CurrentNode.RightOffset;
+		}
 	}
-	return CurrentPos;
+	return CandPos;
 }
+
 template<typename id, typename data>
 class hsMap<id , data>::iterator{
 	private:
@@ -454,20 +449,26 @@ class hsMap<id , data>::iterator{
 		iterator():Owner(nullptr), CurrentPos(-1){}
 		iterator(hsMap& _Owner, const long long& _CurrentPos): Owner(&_Owner), CurrentPos(_CurrentPos) {}
 		iterator(const iterator& _Other): Owner(_Other.Owner), CurrentPos(_Other.CurrentPos){}
-		std::pair<id, dataProxy> operator*(){
+		std::pair<const id, dataProxy> operator*(){
 			hardNode CurrentNode;
-			if(!(Owner->read_file(CurrentPos, CurrentNode)))
-				throw std::runtime_error("err in 'hsMap<id, data>::iterator::operator*' can't read");
-
-			return std::pair<id, dataProxy>(CurrentNode.Id, dataProxy(Owner->DataFile, CurrentPos, CurrentNode));
+			if(!(Owner->read_file(CurrentPos, CurrentNode))) throw std::runtime_error("err in hsMap<id , data>::iterator::operator*");
+			return std::pair<const id, dataProxy>(CurrentNode.Id , dataProxy(Owner->File, CurrentPos, CurrentNode));
+		}
+		iterator& operator=(const iterator& _Other){
+			Owner = _Other.Owner;
+			CurrentPos = _Other.CurrentPos;
 		}
 		iterator& operator++(){
-			CurrentPos = (Owner->successor(CurrentPos));
+			hardNode CurrentNode;
+			if(!Owner->read_file(CurrentPos, CurrentNode)) throw std::runtime_error("can't read");
+			CurrentPos = (Owner->successor(CurrentNode.Id));
 			return *this;
 		}
 		iterator& operator++(int){
 			auto Temp = *this;
-			CurrentPos = (Owner->successor(CurrentPos));
+			hardNode CurrentNode;
+			if(!Owner->read_file(CurrentPos, CurrentNode)) throw std::runtime_error("can't read");
+			CurrentPos = (Owner->successor(CurrentNode.Id));
 			return Temp;
 		}
 		bool operator==(const iterator& _Other){
