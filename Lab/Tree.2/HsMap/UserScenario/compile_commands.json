@@ -1,0 +1,17 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-g",
+      "-IInclude",
+      "-c",
+      "-o",
+      "Bin/main.o",
+      "Source/main.cpp"
+    ],
+    "directory": "/home/amir/Programming/SelfProjects/Data/WordSense/Lab/Tree.2/HsMap/UserScenario",
+    "file": "/home/amir/Programming/SelfProjects/Data/WordSense/Lab/Tree.2/HsMap/UserScenario/Source/main.cpp",
+    "output": "/home/amir/Programming/SelfProjects/Data/WordSense/Lab/Tree.2/HsMap/UserScenario/Bin/main.o"
+  }
+]
