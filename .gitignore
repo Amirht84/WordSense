@@ -1,3 +1,8 @@
 *.o
 *.out
 *.dat
+*.bin
+*.data
+*.swp
+.cache/
+Logs/
