@@ -81,6 +81,7 @@ class hardTree{
 			return Output;
 		}
 		bool is_in_child(const data&);
+		inline void root(){ThisPlace = RootPos;}
 };
 template<typename data>
 long long hardTree<data>::find_free_pos(){
@@ -142,7 +143,7 @@ bool hardTree<data>::is_in_child(const data& Child){
 	if(CurrentNode.ChildsMapId == -1){
 		return false;
 	}else{
-		Adds.Change_id(CurrentNode.ChildsMapId);
+		Adds.change_id(CurrentNode.ChildsMapId);
 		return Adds.find(Child) != Adds.end();
 	}
 }

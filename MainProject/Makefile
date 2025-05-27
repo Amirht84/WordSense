@@ -17,7 +17,7 @@ $(TARGET): $(OBJS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(OBJ_DIR)
-	$(CXX) $(CFLAGS) $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:
 	$(RM) $(TAGET) $(OBJS)

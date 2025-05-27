@@ -1,0 +1,17 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-g",
+      "-IInclude",
+      "-o",
+      "Bin/main.o",
+      "Source/main.cpp"
+    ],
+    "directory": "/home/amir/Programming/SelfProjects/Data/WordSense/MainProject",
+    "file": "/home/amir/Programming/SelfProjects/Data/WordSense/MainProject/Source/main.cpp",
+    "output": "/home/amir/Programming/SelfProjects/Data/WordSense/MainProject/Bin/main.o"
+  }
+]

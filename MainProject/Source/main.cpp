@@ -1,15 +1,16 @@
-#include "hardtree.h"
-#include <cstdlib>
+//#include "hardtree.h"
+//#include <cstdlib>
 #include <iostream>
-#include <list>
-#include <string>
-#include <set>
+//#include <list>
+//#include <string>
+//#include <set>
 
-void print_word_sense(hardTree<char>& Words, std::list<char>& Chars, std::string& CandWord, const size_t&, std::set<std::string>&);
-void classic_searcher(std::list<char>& Chars, std::string& CandWord, const size_t& Length, std::set<std::string>& Output);
+//void print_word_sense(hardTree<char>& Words, std::list<char>& Chars, std::string& CandWord, const size_t&, std::set<std::string>&);
+//void classic_searcher(std::list<char>& Chars, std::string& CandWord, const size_t& Length, std::set<std::string>& Output);
 
 int main(){
-	std::string User;
+	std::cout << "Hello world\n";
+	/*	std::string User;
 	while(std::cin >> User){
 
 	if(User == "Write"){
@@ -105,10 +106,10 @@ int main(){
 		}
 	}
 		std::cout << "End of Circle\n";
-	}
+	}*/
 	return 0;
 }
-void classic_searcher(std::list<char>& Chars, std::string& CandWord, const size_t& Length, std::set<std::string>& Output){
+/*void classic_searcher(std::list<char>& Chars, std::string& CandWord, const size_t& Length, std::set<std::string>& Output){
 	if(CandWord.size() == Length){
 		Output.insert(CandWord);
 	}
@@ -141,4 +142,4 @@ void print_word_sense(hardTree<char>& Words, std::list<char>& Chars, std::string
 		}
 	}
 }
-
+*/
