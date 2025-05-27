@@ -102,9 +102,12 @@ int main(){
 				if(Word == Input) std::cout << Word << '\n';
 			}
 		}
+	}else if(User == "Exit"){
+		break;
 	}
 		std::cout << "End of Circle\n";
 	}
+	std::cout << "End of programming\n";
 	return 0;
 }
 void classic_searcher(std::list<char>& Chars, std::string& CandWord, const size_t& Length, std::set<std::string>& Output){
