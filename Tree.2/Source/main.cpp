@@ -1,37 +1,30 @@
-#include "hsmap.h"
+#include "hardtree.h"
 #include <iostream>
 
 int main(){
-	hsMap<int, char> Map("Map/");
+	hardTree<char> Test("Test/");
 
-	char Input = ' ';
-	while(Input != 'f'){
+	std::string Input = "";
+	while(Input != "exit"){
 		std::cin >> Input;
-		switch(Input){
-			case 'i':{
-				int Key;
-				char Val;	
-				std::cin >> Key >> Val;
-				Map.insert({Key, Val});
-			break;}case 'd':{
-				for(auto It : Map){
-					std::cout << It.first << " " << It.second << '|';
-				}
-				std::cout << '\n';
-			break;}case 's':{
-				int Key;
-				std::cin >> Key;
-				auto It = Map.find(Key);
-				std::cout << (*It).second << '\n';
-			break;}case 'm':{
-				int MapId;
-				std::cin >> MapId;
-				Map.make_id(MapId);
-			break;}case 'c':{
-				int MapId;
-				std::cin >> MapId;
-				Map.change_id(MapId);
-			break;}
+		if(Input == "mkdir"){
+			char Dir;
+			std::cin >> Dir;
+			Test.mkdir(Dir);
+		}else if(Input == "cd"){
+			char Dir;
+			std::cin >> Dir;
+			if(Dir == '.'){
+				Test.cd_up();
+			}else{
+				Test.cd(Dir);
+			}
+		}else if(Input == "ls"){
+			auto List = Test.ls();
+			for(const auto& Output : List){
+				std::cout << Output << ' ';
+			}
+			std::cout << '\n';
 		}
 	}
 
