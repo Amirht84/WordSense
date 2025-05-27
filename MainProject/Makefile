@@ -3,7 +3,7 @@ OBJ_DIR = Bin
 HED_DIR = Include
 
 SRCS = $(wildcard $(SRC_DIR)/*cpp)
-OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BIN_DIR)/%.o, $(SRCS))
+OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
 CXX = g++
 CFLAGS = -Wall -g -I$(HED_DIR)
