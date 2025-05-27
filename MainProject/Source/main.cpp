@@ -1,16 +1,15 @@
-//#include "hardtree.h"
-//#include <cstdlib>
+#include "hardtree.h"
+#include <cstdlib>
 #include <iostream>
-//#include <list>
-//#include <string>
-//#include <set>
+#include <list>
+#include <string>
+#include <set>
 
-//void print_word_sense(hardTree<char>& Words, std::list<char>& Chars, std::string& CandWord, const size_t&, std::set<std::string>&);
-//void classic_searcher(std::list<char>& Chars, std::string& CandWord, const size_t& Length, std::set<std::string>& Output);
+void print_word_sense(hardTree<char>& Words, std::list<char>& Chars, std::string& CandWord, const size_t&, std::set<std::string>&);
+void classic_searcher(std::list<char>& Chars, std::string& CandWord, const size_t& Length, std::set<std::string>& Output);
 
 int main(){
-	std::cout << "Hello world\n";
-	/*	std::string User;
+	std::string User;
 	while(std::cin >> User){
 
 	if(User == "Write"){
@@ -21,7 +20,6 @@ int main(){
 	
 		while(std::getline(File, Input)){
 			Input.pop_back();
-			std::cout << Input << '\n';
 			for(size_t i = 0 ; i < Input.size() ; i++){
 				if(!Words.is_in_child(Input[i])){
 					Words.mkdir(Input[i]);
@@ -30,7 +28,7 @@ int main(){
 			}
 			Words.mkdir('!');
 			Words.root();
-			std::cout << "added " << Input << '\n';
+			std::cout << Input << '\n';
 		}
 	}else if(User == "Check"){
 		hardTree<char> Words("Words/");
@@ -106,10 +104,10 @@ int main(){
 		}
 	}
 		std::cout << "End of Circle\n";
-	}*/
+	}
 	return 0;
 }
-/*void classic_searcher(std::list<char>& Chars, std::string& CandWord, const size_t& Length, std::set<std::string>& Output){
+void classic_searcher(std::list<char>& Chars, std::string& CandWord, const size_t& Length, std::set<std::string>& Output){
 	if(CandWord.size() == Length){
 		Output.insert(CandWord);
 	}
@@ -142,4 +140,4 @@ void print_word_sense(hardTree<char>& Words, std::list<char>& Chars, std::string
 		}
 	}
 }
-*/
+
