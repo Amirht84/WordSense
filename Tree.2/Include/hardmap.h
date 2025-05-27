@@ -356,6 +356,9 @@ long long hardMap<id , data>::find_free_pos(){
 	const std::string ErrLog = "Err in hardMap<id , data>::find_free_pos";
 	File.seekp(0 , std::ios::end);
 	long long End = File.tellp();	
+
+	return End;
+
 	long long Offset = sizeof(firstKey);
 	char IsUsed;
 	while(true){
