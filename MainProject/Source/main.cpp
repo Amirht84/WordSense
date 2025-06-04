@@ -12,7 +12,12 @@ int main(){
 	std::string User;
 	while(std::cin >> User){
 
-	if(User == "Write"){
+	if(User == "GetLog"){
+		hardTree<char> Words("Words/");
+		std::cout << "Size: " << Words.size() << '\n';
+		std::cout << "Null Count: " << Words.null_count() << '\n';
+		std::cerr << "here\n";
+	}else if(User == "Write"){
 		hardTree<char> Words("Words/");
 		std::fstream File("words_alpha.txt");
 		std::string Input;
@@ -26,7 +31,7 @@ int main(){
 				}
 				Words.cd(Input[i]);
 			}
-			Words.mkdir('!');
+			Words.mknull('!');
 			Words.root();
 			std::cout << Input << '\n';
 		}
@@ -132,7 +137,7 @@ void print_word_sense(hardTree<char>& Words, std::list<char>& Chars, std::string
 			Words.cd(*Char);
 			const char Temp = *Char;
 			*Char = '?';
-			if(Words.is_in_child('!') && CandWord.size() == Length){
+			if(Words.is_null_in_child('!') && CandWord.size() == Length){
 				Output.insert(CandWord);
 //				Count++;
 			}
