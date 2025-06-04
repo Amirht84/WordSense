@@ -25,7 +25,7 @@ class hsMap {
 			int BF = 0;
 		};
 		struct firstKey{
-			int Size;
+			long long Size;
 			long long Head;
 		};
 		#pragma pack(pop)
@@ -57,7 +57,7 @@ class hsMap {
 			}
 		};
 		
-		int Size;
+		long long Size;
 		long long Head;
 		std::fstream File;
 		hardMap<int, firstKey> Keys;

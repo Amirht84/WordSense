@@ -19,13 +19,13 @@ class hardTree{
 			int ChildsMapId = -1;
 		};
 		struct firstKey{
-			int Size;
-			int NullCount;
+			long long Size;
+			long long NullCount;
 			long long RootPos;
 		};
 		#pragma pack(pop)
-		int Size;
-		int NullCount;
+		long long Size;
+		long long NullCount;
 		long long RootPos;
 		hsMap<data, long long> Adds;
 		long long ThisPlace;
