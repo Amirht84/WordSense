@@ -89,6 +89,10 @@ class hardTree{
 		bool is_null_in_child(const data&);
 		inline int null_count(){ return NullCount; }
 		inline int size(){ return Size; }
+		~hardTree(){
+			if(!write_key({Size, NullCount, RootPos})) std::cerr << "err in hardTree<data>::~hardTree can't write";
+			File.close();
+		}
 };
 template<typename data>
 long long hardTree<data>::find_free_pos(){
