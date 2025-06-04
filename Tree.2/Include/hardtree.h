@@ -20,6 +20,7 @@ class hardTree{
 		};
 		struct firstKey{
 			int Size;
+			int NullCount;
 			long long RootPos;
 		};
 		#pragma pack(pop)
@@ -45,7 +46,7 @@ class hardTree{
 				if(!File) throw std::runtime_error("err in  hardTree<data>::hardTree invalid file address");
 
 				RootPos = sizeof(firstKey);
-				if(!write_key({0, RootPos})) throw std::runtime_error("err in hardTree<data>::hardTree can't write");
+				if(!write_key({0, 0, RootPos})) throw std::runtime_error("err in hardTree<data>::hardTree can't write");
 				hardNode Root;
 				if(!write_file(RootPos, Root)) throw std::runtime_error("err in hardTree<data>::hardTree can't write");
 			}else{
@@ -163,7 +164,7 @@ void hardTree<data>::mkdir(const data& Data){
 		Adds.change_id(Size);
 		CurrentNode.ChildsMapId = Size;
 		if(!write_file(ThisPlace, CurrentNode)) throw std::runtime_error("err in  hardTree<data>::mkdir can't write");
-		if(!write_key({Size, RootPos})) throw std::runtime_error("err in hardTree<data>::mkdir can't write");
+		if(!write_key({Size, NullCount, RootPos})) throw std::runtime_error("err in hardTree<data>::mkdir can't write");
 	}else{
 		Adds.change_id(CurrentNode.ChildsMapId);
 	}
@@ -177,19 +178,19 @@ void hardTree<data>::mkdir(const data& Data){
 template <typename data>
 void hardTree<data>::mknull(const data& NullData){
 	hardNode CurrentNode;
-	if(!read_File(ThisPlace, CurrentNode)) throw std::runtime_error("err in hardTree<data>::mknull can't read");
+	if(!read_file(ThisPlace, CurrentNode)) throw std::runtime_error("err in hardTree<data>::mknull can't read");
 	if(CurrentNode.ChildsMapId == -1){
 		++Size;
 		Adds.make_id(Size);
 		Adds.change_id(Size);
 		CurrentNode.ChildsMapId = Size;
 		if(!write_file(ThisPlace, CurrentNode)) throw std::runtime_error("err in hardTree<data>::mknull can't write");
-		if(!write_key({Size, RootPos})) throw std::runtime_error("err in hardTree<data>::mknull ca't write");
 	}else{
 		Adds.change_id(CurrentNode.ChildsMapId);
 	}
 	Adds.insert({NullData, -1});
 	++NullCount;
+	if(!write_key({Size, NullCount, RootPos})) throw std::runtime_error("err in hardTree<data>::mknull ca't write");
 }
 template <typename data>
 bool hardTree<data>::is_null_in_child(const data& NullData){
