@@ -24,6 +24,7 @@ class hardTree{
 		};
 		#pragma pack(pop)
 		int Size;
+		int NullCount;
 		long long RootPos;
 		hsMap<data, long long> Adds;
 		long long ThisPlace;
@@ -84,6 +85,8 @@ class hardTree{
 		inline void root(){ThisPlace = RootPos;}
 		void mknull(const data&);
 		bool is_null_in_child(const data&);
+		inline int null_count(){ return NullCount; }
+		inline int size(){ return Size; }
 };
 template<typename data>
 long long hardTree<data>::find_free_pos(){
@@ -186,6 +189,7 @@ void hardTree<data>::mknull(const data& NullData){
 		Adds.change_id(CurrentNode.ChildsMapId);
 	}
 	Adds.insert({NullData, -1});
+	++NullCount;
 }
 template <typename data>
 bool hardTree<data>::is_null_in_child(const data& NullData){
