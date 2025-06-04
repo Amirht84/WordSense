@@ -200,7 +200,7 @@ bool hardTree<data>::is_null_in_child(const data& NullData){
 	}else{
 		Adds.change_id(CurrentNode.ChildsMapId);
 		auto It = Adds.find(NullData);
-		if(It != Adds.end() && *It == -1){
+		if(It != Adds.end() && (*It).second == -1){
 			return true;
 		}else{
 			return false;
