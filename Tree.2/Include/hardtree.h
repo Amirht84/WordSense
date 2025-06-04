@@ -82,6 +82,8 @@ class hardTree{
 		}
 		bool is_in_child(const data&);
 		inline void root(){ThisPlace = RootPos;}
+		void mknull(const data&);
+		bool is_null_in_child(const data&);
 };
 template<typename data>
 long long hardTree<data>::find_free_pos(){
@@ -169,4 +171,37 @@ void hardTree<data>::mkdir(const data& Data){
 	New.Data = Data;
 	if(!write_file(NewPos, New)) throw std::runtime_error("err in  hardTree<data>::mkdir can't write");
 }
+template <typename data>
+void hardTree<data>::mknull(const data& NullData){
+	hardNode CurrentNode;
+	if(!read_File(ThisPlace, CurrentNode)) throw std::runtime_error("err in hardTree<data>::mknull can't read");
+	if(CurrentNode.ChildsMapId == -1){
+		++Size;
+		Adds.make_id(Size);
+		Adds.change_id(Size);
+		CurrentNode.ChildsMapId = Size;
+		if(!write_file(ThisPlace, CurrentNode)) throw std::runtime_error("err in hardTree<data>::mknull can't write");
+		if(!write_key({Size, RootPos})) throw std::runtime_error("err in hardTree<data>::mknull ca't write");
+	}else{
+		Adds.change_id(CurrentNode.ChildsMapId);
+	}
+	Adds.insert({NullData, -1});
+}
+template <typename data>
+bool hardTree<data>::is_null_in_child(const data& NullData){
+	hardNode CurrentNode;
+	if(!read_file(ThisPlace, CurrentNode)) throw std::runtime_error("err in hardTree<data>::is_null_in_child can't read");
+	if(CurrentNode.ChildsMapId == -1){
+		return false;
+	}else{
+		Adds.change_id(CurrentNode.ChildsMapId);
+		auto It = Adds.find(NullData);
+		if(It != Adds.end() && *It == -1){
+			return true;
+		}else{
+			return false;
+		}
+	}
+}
+
 #endif
