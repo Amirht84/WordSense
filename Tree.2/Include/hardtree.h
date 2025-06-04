@@ -35,7 +35,7 @@ class hardTree{
 		bool write_file(const long long&, const hardNode&);
 		bool write_key(const firstKey&);
 	public:
-		hardTree(const std::string& _DirName): Size(0), Adds(_DirName + "Adds/"){
+		hardTree(const std::string& _DirName): Size(0), NullCount(0), Adds(_DirName + "Adds/"){
 			std::filesystem::create_directories(_DirName);
 			const std::string FileName = _DirName + "hardtree.dat";
 			File.open(FileName, std::ios::in | std::ios::out | std::ios::binary);
