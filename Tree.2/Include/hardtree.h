@@ -54,6 +54,7 @@ class hardTree{
 				firstKey FirstKey;
 				File.read(reinterpret_cast<char*>(&FirstKey), sizeof(FirstKey));
 				Size = FirstKey.Size;
+				NullCount = FirstKey.NullCount;
 				RootPos = FirstKey.RootPos;
 			}
 			ThisPlace = RootPos;
