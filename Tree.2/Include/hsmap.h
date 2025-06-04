@@ -121,7 +121,7 @@ class hsMap {
 		void make_id(const int&);
 
 		~hsMap(){
-			if(FirstKey != Keys.end)
+			if(FirstKey != Keys.end())
 				if(!write_key({Size , Head})) std::cerr << "err in hsMap<id , data>::~hsMap\n";
 
 			File.close();
