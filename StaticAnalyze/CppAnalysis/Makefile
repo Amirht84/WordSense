@@ -20,5 +20,5 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:
-	$(RM) $(TAGET) $(OBJS)
+	$(RM) $(TARGET) $(OBJS)
 	@rmdir $(OBJ_DIR)

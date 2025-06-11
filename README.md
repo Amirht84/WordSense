@@ -1,1 +1,1 @@
-In this place I develop main idia of programming, the searcher and writer.
+In this branch, I estimate the time complexity through statistical analysis.

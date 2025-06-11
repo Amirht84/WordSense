@@ -25,7 +25,7 @@ class hsMap {
 			int BF = 0;
 		};
 		struct firstKey{
-			int Size;
+			long long Size;
 			long long Head;
 		};
 		#pragma pack(pop)
@@ -57,7 +57,7 @@ class hsMap {
 			}
 		};
 		
-		int Size;
+		long long Size;
 		long long Head;
 		std::fstream File;
 		hardMap<int, firstKey> Keys;
@@ -121,7 +121,9 @@ class hsMap {
 		void make_id(const int&);
 
 		~hsMap(){
-			if(!write_key({Size , Head})) std::cerr << "err in hsMap<id , data>::~hsMap\n";
+			if(FirstKey != Keys.end())
+				if(!write_key({Size , Head})) std::cerr << "err in hsMap<id , data>::~hsMap\n";
+
 			File.close();
 		}
 };

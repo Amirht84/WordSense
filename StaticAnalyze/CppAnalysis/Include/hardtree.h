@@ -19,12 +19,13 @@ class hardTree{
 			int ChildsMapId = -1;
 		};
 		struct firstKey{
-			int Size;
+			long long Size;
+			long long NullCount;
 			long long RootPos;
 		};
 		#pragma pack(pop)
-		int Size;
-		int NullCount;
+		long long Size;
+		long long NullCount;
 		long long RootPos;
 		hsMap<data, long long> Adds;
 		long long ThisPlace;
@@ -34,7 +35,7 @@ class hardTree{
 		bool write_file(const long long&, const hardNode&);
 		bool write_key(const firstKey&);
 	public:
-		hardTree(const std::string& _DirName): Size(0), Adds(_DirName + "Adds/"){
+		hardTree(const std::string& _DirName): Size(0), NullCount(0), Adds(_DirName + "Adds/"){
 			std::filesystem::create_directories(_DirName);
 			const std::string FileName = _DirName + "hardtree.dat";
 			File.open(FileName, std::ios::in | std::ios::out | std::ios::binary);
@@ -45,7 +46,7 @@ class hardTree{
 				if(!File) throw std::runtime_error("err in  hardTree<data>::hardTree invalid file address");
 
 				RootPos = sizeof(firstKey);
-				if(!write_key({0, RootPos})) throw std::runtime_error("err in hardTree<data>::hardTree can't write");
+				if(!write_key({0, 0, RootPos})) throw std::runtime_error("err in hardTree<data>::hardTree can't write");
 				hardNode Root;
 				if(!write_file(RootPos, Root)) throw std::runtime_error("err in hardTree<data>::hardTree can't write");
 			}else{
@@ -53,6 +54,7 @@ class hardTree{
 				firstKey FirstKey;
 				File.read(reinterpret_cast<char*>(&FirstKey), sizeof(FirstKey));
 				Size = FirstKey.Size;
+				NullCount = FirstKey.NullCount;
 				RootPos = FirstKey.RootPos;
 			}
 			ThisPlace = RootPos;
@@ -87,6 +89,10 @@ class hardTree{
 		bool is_null_in_child(const data&);
 		inline int null_count(){ return NullCount; }
 		inline int size(){ return Size; }
+		~hardTree(){
+			if(!write_key({Size, NullCount, RootPos})) std::cerr << "err in hardTree<data>::~hardTree can't write";
+			File.close();
+		}
 };
 template<typename data>
 long long hardTree<data>::find_free_pos(){
@@ -163,7 +169,7 @@ void hardTree<data>::mkdir(const data& Data){
 		Adds.change_id(Size);
 		CurrentNode.ChildsMapId = Size;
 		if(!write_file(ThisPlace, CurrentNode)) throw std::runtime_error("err in  hardTree<data>::mkdir can't write");
-		if(!write_key({Size, RootPos})) throw std::runtime_error("err in hardTree<data>::mkdir can't write");
+		if(!write_key({Size, NullCount, RootPos})) throw std::runtime_error("err in hardTree<data>::mkdir can't write");
 	}else{
 		Adds.change_id(CurrentNode.ChildsMapId);
 	}
@@ -184,12 +190,12 @@ void hardTree<data>::mknull(const data& NullData){
 		Adds.change_id(Size);
 		CurrentNode.ChildsMapId = Size;
 		if(!write_file(ThisPlace, CurrentNode)) throw std::runtime_error("err in hardTree<data>::mknull can't write");
-		if(!write_key({Size, RootPos})) throw std::runtime_error("err in hardTree<data>::mknull ca't write");
 	}else{
 		Adds.change_id(CurrentNode.ChildsMapId);
 	}
 	Adds.insert({NullData, -1});
 	++NullCount;
+	if(!write_key({Size, NullCount, RootPos})) throw std::runtime_error("err in hardTree<data>::mknull ca't write");
 }
 template <typename data>
 bool hardTree<data>::is_null_in_child(const data& NullData){

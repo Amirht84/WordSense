@@ -25,7 +25,7 @@ class hardMap {
 			int BF = 0;
 		};
 		struct firstKey{
-			int Size;
+			long long Size;
 			long long Head;
 		};
 		#pragma pack(pop)
@@ -57,7 +57,7 @@ class hardMap {
 			}
 		};
 		
-		int Size;
+		long long Size;
 		long long Head;
 		std::fstream File;
 		long long find_free_pos();
